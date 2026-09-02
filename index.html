@@ -26,6 +26,7 @@ select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://ww
 .date-box{display:flex;flex-direction:column;align-items:center;justify-content:center;height:94px;border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:.18s;background:#fff}
 .date-box .month{font-size:11px;color:var(--muted);margin-bottom:7px}.date-box strong{font-size:16px}.date-box em{font-style:normal;font-size:11px;color:var(--muted);margin-top:4px}
 .date input:checked+.date-box{border-color:var(--accent);background:var(--accent2);box-shadow:inset 0 0 0 1px var(--accent)}.date input:checked+.date-box strong{color:var(--accent)}
+.date.noteDate .date-box em{color:#d9822b;font-weight:800}.date.noteDate input:checked+.date-box{border-color:#d9822b;background:#fff6ec;box-shadow:inset 0 0 0 1px #d9822b}.date.noteDate input:checked+.date-box strong{color:#c26a12}
 .notice{margin-top:13px;padding:12px 14px;border-radius:11px;background:#f8f9fc;color:var(--muted);font-size:12px;line-height:1.6}
 .actions{margin-top:22px;display:flex;gap:10px}.btn{height:54px;border:0;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer}.primary{flex:1;background:var(--ink);color:#fff}.secondary{width:150px;background:#fff;border:1px solid var(--line);color:var(--ink)}
 .result{display:none}.result.show{display:block}.result-title{text-align:center;margin:5px 0 25px}.result-title h2{font-size:23px}.winner{background:var(--ink);color:#fff;border-radius:18px;padding:22px;margin-bottom:14px}.winner small{opacity:.7}.winner strong{display:block;font-size:25px;margin-top:5px}.bar-row{margin:15px 0}.bar-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}.bar-bg{height:10px;background:#edf0f5;border-radius:10px;overflow:hidden}.bar{height:100%;background:var(--accent);border-radius:10px;width:0;transition:width .5s}
@@ -37,6 +38,10 @@ select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://ww
 .modal-icon svg{width:26px;height:26px}
 @keyframes iconPop{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
 .modal-box h3{margin:16px 0 7px;font-size:21px;letter-spacing:-.4px}.modal-box p{font-size:13px;color:var(--muted);line-height:1.6}.modal-box button{margin-top:18px;width:100%;height:48px;border:0;border-radius:11px;background:var(--ink);color:#fff;font-weight:800;cursor:pointer;transition:.15s}.modal-box button:hover{opacity:.9}
+.modal-icon.warn{background:#fff1e0;color:#d9822b}
+.confirm-actions{display:flex;gap:10px;margin-top:18px}.confirm-actions button{flex:1;height:48px;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;border:0;transition:.15s}
+.confirm-actions .no-btn{background:#fff;border:1px solid var(--line);color:var(--ink)}.confirm-actions .no-btn:hover{background:#f6f7fb}
+.confirm-actions .yes-btn{background:var(--ink);color:#fff}.confirm-actions .yes-btn:hover{opacity:.9}
 @media(max-width:600px){.container{padding-top:35px}.header-inner{width:calc(100% - 28px)}h1{font-size:29px}.card{padding:21px;border-radius:17px}.grid{grid-template-columns:repeat(2,1fr)}.date-box{height:86px}.actions{flex-direction:column}.secondary{width:100%}}
 </style>
 </head>
@@ -80,6 +85,8 @@ select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://ww
 
 <div id="modal" class="modal"><div class="modal-box"><div class="modal-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3 id="modalTitle">투표해주셔서 감사합니다!</h3><p id="modalText"></p><button onclick="closeModal()">확인</button></div></div>
 
+<div id="confirmModal" class="modal"><div class="modal-box"><div class="modal-icon warn"><svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4.5M12 17h.01M10.3 4.2 2.9 17a1.8 1.8 0 0 0 1.55 2.7h15.1A1.8 1.8 0 0 0 21.1 17L13.7 4.2a1.8 1.8 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>겹치는 일정이 있어요</h3><p id="confirmText"></p><div class="confirm-actions"><button class="no-btn" id="confirmNo">아니오</button><button class="yes-btn" id="confirmYes">예</button></div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
@@ -103,6 +110,10 @@ const dates=[
  ["2026-09-10","9월 10일","목요일"],["2026-09-11","9월 11일","금요일"],["2026-09-14","9월 14일","월요일"],
  ["2026-09-15","9월 15일","화요일"],["2026-09-16","9월 16일","수요일"],["2026-09-17","9월 17일","목요일"]
 ];
+const dateNotes={
+ "2026-09-10":"AI 중급자 교육 일정이 있습니다.",
+ "2026-09-17":"정석원 부장 ESG 세미나 일정이 있습니다."
+};
 
 let latestVotes={};
 
@@ -112,7 +123,32 @@ function renderNames(){
 }
 function renderDates(){
  const grid=document.getElementById("dateGrid");
- grid.innerHTML=dates.map(d=>`<label class="date"><input type="checkbox" value="${d[0]}"><span class="date-box"><span class="month">${d[1]}</span><strong>${d[2]}</strong><em>선택 가능</em></span></label>`).join("");
+ grid.innerHTML=dates.map(d=>{
+  const note=dateNotes[d[0]];
+  return `<label class="date${note?" noteDate":""}"><input type="checkbox" value="${d[0]}"><span class="date-box"><span class="month">${d[1]}</span><strong>${d[2]}</strong><em>${note?"⚠ 일정 확인":"선택 가능"}</em></span></label>`;
+ }).join("");
+ grid.querySelectorAll("input").forEach(cb=>{
+  cb.addEventListener("click",function(e){
+   const note=dateNotes[this.value];
+   if(this.checked&&note){
+    e.preventDefault();
+    const info=dates.find(d=>d[0]===this.value);
+    showDateConfirm(`${info[1]}(${info[2]})`,note,()=>{this.checked=true;});
+   }
+  });
+ });
+}
+function showDateConfirm(dateLabel,noteText,onYes){
+ document.getElementById("confirmText").textContent=`${dateLabel}은(는) ${noteText} 그래도 선택하시겠습니까?`;
+ const modal=document.getElementById("confirmModal");
+ modal.classList.add("show");
+ const yesBtn=document.getElementById("confirmYes");
+ const noBtn=document.getElementById("confirmNo");
+ function cleanup(){modal.classList.remove("show");yesBtn.removeEventListener("click",yesHandler);noBtn.removeEventListener("click",noHandler);}
+ function yesHandler(){onYes();cleanup();}
+ function noHandler(){cleanup();}
+ yesBtn.addEventListener("click",yesHandler);
+ noBtn.addEventListener("click",noHandler);
 }
 function applyNameSelection(){
  const name=document.getElementById("name").value;
