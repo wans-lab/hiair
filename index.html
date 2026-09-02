@@ -2,24 +2,31 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#172033">
 <title>하이에어코리아 기획팀 | 회식 일정 투표</title>
 <style>
 :root{--ink:#172033;--muted:#718096;--line:#e7ebf2;--bg:#f5f7fb;--accent:#1f5eff;--accent2:#edf3ff;--white:#fff}
-*{box-sizing:border-box} body{margin:0;font-family:"Pretendard","Noto Sans KR",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+*{box-sizing:border-box}
+html{width:100%;overflow-x:hidden}
+body{margin:0;width:100%;overflow-x:hidden;font-family:"Pretendard","Noto Sans KR","Malgun Gothic",Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom)}
+button,select,input,textarea{font-family:inherit}
+.date-box,.btn,select.input,.confirm-actions button,.modal-box button{touch-action:manipulation}
 .header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center}
 .header-inner{width:min(1040px,calc(100% - 40px));margin:auto;display:flex;justify-content:space-between;align-items:center}
 .brand{display:flex;align-items:center;gap:11px}.mark{width:35px;height:35px;border-radius:10px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800}
 .company{font-size:13px;font-weight:800;letter-spacing:.5px}.dept{font-size:12px;color:var(--muted);margin-top:2px}
-.container{width:min(760px,calc(100% - 32px));margin:0 auto;padding:52px 0 70px}
+.container{width:min(760px,calc(100% - 32px));max-width:100%;margin:0 auto;padding:52px 0 70px}
 .hero{text-align:center;margin-bottom:32px}.badge{display:inline-block;padding:7px 12px;border-radius:999px;background:var(--accent2);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:1.1px}
 h1{font-size:36px;line-height:1.25;margin:17px 0 12px;letter-spacing:-1.8px}h1 strong{font-weight:800}
 .hero p{margin:0;color:var(--muted);line-height:1.7;font-size:14px}
-.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:27px;margin-top:16px;box-shadow:0 7px 24px rgba(23,32,51,.04)}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:27px;margin-top:16px;box-shadow:0 7px 24px rgba(23,32,51,.04);max-width:100%}
 .section{display:flex;gap:13px;align-items:flex-start;margin-bottom:21px}.num{width:30px;height:30px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
 h2{font-size:17px;margin:1px 0 5px;letter-spacing:-.4px}.desc{font-size:12px;color:var(--muted)}
-.input,select.input{width:100%;height:52px;border:1px solid #dce2eb;border-radius:12px;padding:0 16px;font-size:15px;outline:none;transition:.2s;background:#fff;color:var(--ink);appearance:none;-webkit-appearance:none}
-select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%23718096' stroke-width='2' fill='none' fill-rule='evenodd'/></svg>");background-repeat:no-repeat;background-position:right 16px center}
+.input,select.input{width:100%;height:52px;border:1px solid #dce2eb;border-radius:12px;padding:0 16px;font-size:16px;line-height:50px;outline:none;transition:.2s;background:#fff;color:var(--ink);appearance:none;-webkit-appearance:none;-moz-appearance:none}
+select.input{padding-right:40px;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%23718096' stroke-width='2' fill='none' fill-rule='evenodd'/></svg>");background-repeat:no-repeat;background-position:right 16px center}
+select.input::-ms-expand{display:none}
 .input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(31,94,255,.08)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .date{position:relative}.date input{position:absolute;opacity:0}
@@ -42,7 +49,10 @@ select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://ww
 .confirm-actions{display:flex;gap:10px;margin-top:18px}.confirm-actions button{flex:1;height:48px;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;border:0;transition:.15s}
 .confirm-actions .no-btn{background:#fff;border:1px solid var(--line);color:var(--ink)}.confirm-actions .no-btn:hover{background:#f6f7fb}
 .confirm-actions .yes-btn{background:var(--ink);color:#fff}.confirm-actions .yes-btn:hover{opacity:.9}
-@media(max-width:600px){.container{padding-top:35px}.header-inner{width:calc(100% - 28px)}h1{font-size:29px}.card{padding:21px;border-radius:17px}.grid{grid-template-columns:repeat(2,1fr)}.date-box{height:86px}.actions{flex-direction:column}.secondary{width:100%}}
+@media(max-width:600px){.container{padding-top:35px}.header-inner{width:calc(100% - 28px)}h1{font-size:29px}.card{padding:21px;border-radius:17px}.grid{grid-template-columns:repeat(2,1fr)}.date-box{height:86px}.actions{flex-direction:column}.secondary{width:100%}.modal-box{padding:26px 22px}}
+@media(max-width:420px){.grid{grid-template-columns:repeat(2,1fr)}.date-box{height:80px}.date-box strong{font-size:14px}.confirm-actions{flex-direction:column}}
+.winner strong{word-break:keep-all;line-height:1.5}
+.voter-dates{word-break:keep-all}
 </style>
 </head>
 <body>
@@ -104,7 +114,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const names=["박정우","김기태","윤석","백종원","박혜진","정시완","박수언","배아람","김현제","정석원","신주항"];
+const names=["박정우","김기태","윤석","백종원","박혜진","정시완","박수언","정석원","김현제","신주항","배아람"];
 const dates=[
  ["2026-09-07","9월 7일","월요일"],["2026-09-08","9월 8일","화요일"],["2026-09-09","9월 9일","수요일"],
  ["2026-09-10","9월 10일","목요일"],["2026-09-11","9월 11일","금요일"],["2026-09-14","9월 14일","월요일"],
@@ -198,8 +208,14 @@ function renderResult(votesObj){
  if(!total){
   document.getElementById("winner").innerHTML=`<div class="winner"><small>현재 투표</small><strong>아직 투표가 없습니다.</strong></div>`;
  }else{
-  const idx=vals.indexOf(max),w=dates[idx];
-  document.getElementById("winner").innerHTML=`<div class="winner"><small>현재 최다 선택</small><strong>🏆 ${w[1]} (${w[2]}) · ${max}명</strong></div>`;
+  const winIdxs=vals.map((v,i)=>v===max?i:-1).filter(i=>i>=0);
+  if(winIdxs.length===1){
+   const w=dates[winIdxs[0]];
+   document.getElementById("winner").innerHTML=`<div class="winner"><small>현재 최다 선택</small><strong>🏆 ${w[1]} (${w[2]}) · ${max}명</strong></div>`;
+  }else{
+   const labels=winIdxs.map(i=>`${dates[i][1]} (${dates[i][2]})`).join(", ");
+   document.getElementById("winner").innerHTML=`<div class="winner"><small>현재 공동 최다 선택 · ${winIdxs.length}개 날짜</small><strong>🏆 ${labels} · 각 ${max}명</strong></div>`;
+  }
  }
  document.getElementById("bars").innerHTML=dates.map((d,i)=>{
   const n=vals[i],pct=max?Math.round(n/max*100):0;
