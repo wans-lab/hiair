@@ -52,17 +52,17 @@ select.input{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://ww
   </div>
 
   <section class="card">
-    <div class="section"><span class="num">01</span><div><h2>이름</h2><div class="desc">본인 이름을 선택해주세요.</div></div></div>
+    <div class="section"><span class="num">01</span><div><h2>이름</h2><div class="desc">본인 이름을 선택해주세요. 이미 투표하셨다면 선택한 날짜가 자동으로 표시됩니다.</div></div></div>
     <select id="name" class="input"><option value="">이름을 선택해주세요</option></select>
   </section>
 
   <section class="card">
     <div class="section"><span class="num">02</span><div><h2>가능한 날짜</h2><div class="desc">참석 가능한 날짜를 모두 선택해주세요.</div></div></div>
     <div class="grid" id="dateGrid"></div>
-    <div class="notice">※ 여러 날짜를 선택할 수 있습니다. 최종 회식일은 가장 많은 표를 받은 날짜를 기준으로 결정합니다. 한 사람당 한 번만 투표할 수 있습니다.</div>
+    <div class="notice" id="notice">※ 여러 날짜를 선택할 수 있습니다. 최종 회식일은 가장 많은 표를 받은 날짜를 기준으로 결정합니다.</div>
     <div class="actions">
       <button class="btn secondary" onclick="showResult()">현재 결과 보기</button>
-      <button class="btn primary" onclick="submitVote()">투표하기</button>
+      <button class="btn primary" id="submitBtn" onclick="submitVote()">투표하기</button>
     </div>
   </section>
   <div class="footer">HIAIR KOREA · 기획팀</div>
@@ -114,16 +114,30 @@ function renderDates(){
  const grid=document.getElementById("dateGrid");
  grid.innerHTML=dates.map(d=>`<label class="date"><input type="checkbox" value="${d[0]}"><span class="date-box"><span class="month">${d[1]}</span><strong>${d[2]}</strong><em>선택 가능</em></span></label>`).join("");
 }
-
+function applyNameSelection(){
+ const name=document.getElementById("name").value;
+ const existing=name&&latestVotes[name]?latestVotes[name].dates||[]:[];
+ document.querySelectorAll("#dateGrid input").forEach(cb=>{cb.checked=existing.includes(cb.value);});
+ const btn=document.getElementById("submitBtn");
+ const notice=document.getElementById("notice");
+ if(existing.length){
+  btn.textContent="수정하기";
+  notice.textContent="※ 이미 투표한 내역입니다. 날짜를 다시 선택하고 [수정하기]를 누르면 내용이 갱신됩니다.";
+ }else{
+  btn.textContent="투표하기";
+  notice.textContent="※ 여러 날짜를 선택할 수 있습니다. 최종 회식일은 가장 많은 표를 받은 날짜를 기준으로 결정합니다.";
+ }
+}
 function submitVote(){
  const name=document.getElementById("name").value;
  const selected=[...document.querySelectorAll("#dateGrid input:checked")].map(x=>x.value);
  if(!name){alert("이름을 선택해주세요.");return;}
  if(!selected.length){alert("가능한 날짜를 한 개 이상 선택해주세요.");return;}
- if(latestVotes[name]){alert("이미 투표한 이름입니다. 한 번만 투표할 수 있습니다.");return;}
+ const isEdit=!!latestVotes[name];
  set(ref(db,"votes/"+name),{dates:selected,timestamp:Date.now()})
   .then(()=>{
-   document.getElementById("modalText").textContent=`${name}님이 ${selected.length}개의 날짜를 선택했습니다.`;
+   document.getElementById("modalTitle").textContent=isEdit?"투표가 수정되었습니다!":"투표해주셔서 감사합니다!";
+   document.getElementById("modalText").textContent=isEdit?`${name}님의 선택이 ${selected.length}개 날짜로 수정되었습니다.`:`${name}님이 ${selected.length}개의 날짜를 선택했습니다.`;
    document.getElementById("modal").classList.add("show");
    fireConfetti();
   })
@@ -177,7 +191,11 @@ function backToVote(){
 onValue(ref(db,"votes"),snap=>{
  latestVotes=snap.val()||{};
  if(document.getElementById("resultPage").classList.contains("show")){renderResult(latestVotes);}
+ const currentName=document.getElementById("name").value;
+ if(currentName){applyNameSelection();}
 });
+
+document.getElementById("name").addEventListener("change",applyNameSelection);
 
 window.submitVote=submitVote;
 window.closeModal=closeModal;
