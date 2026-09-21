@@ -3,341 +3,837 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>정화정 — 졸지말고 일해</title>
+<title>ERP Cosmos Navigation Hub</title>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02030a;color:#fff;font-family:Inter,Pretendard,Arial,sans-serif}
+body{cursor:grab}
+body.dragging{cursor:grabbing}
+#space{position:fixed;inset:0;width:100%;height:100%;display:block}
 
-  * { box-sizing: border-box; }
-  html, body { width:100%; height:100%; margin:0; }
-  body {
-    overflow:hidden;
-    font-family:'Noto Sans KR', sans-serif;
-    background:#050509;
-    color:#fff;
-  }
+/* ───────────── 빅뱅 오프닝 인트로 연출 ───────────── */
+#bigbang-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: bigbangSequence 3.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
-  /* 움직이는 배경 */
-  .scene {
-    position:relative;
-    width:100vw;
-    height:100vh;
-    display:grid;
-    place-items:center;
-    overflow:hidden;
-    background:
-      radial-gradient(circle at 50% 45%, rgba(112,58,255,.18), transparent 28%),
-      radial-gradient(circle at 15% 20%, rgba(0,229,255,.12), transparent 25%),
-      radial-gradient(circle at 85% 80%, rgba(255,0,128,.10), transparent 28%),
-      #050509;
-  }
+.singularity {
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #fff, 0 0 40px #60a5fa, 0 0 80px #a855f7;
+  animation: singularityPulse 1.8s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
 
-  .grid {
-    position:absolute;
-    inset:-50%;
-    background-image:
-      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-    background-size:55px 55px;
-    transform:perspective(500px) rotateX(62deg) translateY(30%);
-    animation:gridMove 9s linear infinite;
-    mask-image:linear-gradient(to top, rgba(0,0,0,1), transparent 75%);
-  }
-  @keyframes gridMove {
-    from { background-position:0 0,0 0; }
-    to { background-position:0 550px,550px 0; }
-  }
+/* 특이점 응축 후 폭발 키프레임 */
+@keyframes singularityPulse {
+  0% { transform: scale(1); opacity: 0.1; }
+  45% { transform: scale(4); opacity: 1; box-shadow: 0 0 50px #fff, 0 0 100px #38bdf8, 0 0 180px #c084fc; }
+  80% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(350); opacity: 1; box-shadow: 0 0 300px #fff, 0 0 600px #fff; }
+}
 
-  .orb {
-    position:absolute;
-    border-radius:50%;
-    filter:blur(2px);
-    opacity:.55;
-    animation:float 7s ease-in-out infinite;
-  }
-  .orb.one {
-    width:260px;height:260px;left:5%;top:8%;
-    background:radial-gradient(circle at 35% 30%, #8b5cff, #2d0d80 45%, transparent 70%);
-  }
-  .orb.two {
-    width:320px;height:320px;right:2%;bottom:-5%;
-    background:radial-gradient(circle at 35% 30%, #00e5ff, #003c88 45%, transparent 70%);
-    animation-delay:-3s;
-  }
-  .orb.three {
-    width:190px;height:190px;right:20%;top:5%;
-    background:radial-gradient(circle at 35% 30%, #ff4fb3, #71002f 45%, transparent 70%);
-    animation-delay:-1.5s;
-  }
-  @keyframes float {
-    50% { transform:translate(30px,-35px) scale(1.08); }
-  }
+/* 암전 -> 완벽한 새하얀 화이트아웃 -> 스르륵 3D 우주 공개 키프레임 */
+@keyframes bigbangSequence {
+  0% { background: #000; opacity: 1; }
+  42% { background: #000; opacity: 1; }
+  48% { background: #ffffff; opacity: 1; } /* 화면 전체 순백색 번짐 */
+  68% { background: #ffffff; opacity: 1; }
+  100% { background: #ffffff; opacity: 0; visibility: hidden; }
+}
 
-  /* 파티클 */
-  .particles { position:absolute; inset:0; pointer-events:none; }
-  .particles i {
-    position:absolute;
-    width:3px;height:3px;
-    border-radius:50%;
-    background:#fff;
-    box-shadow:0 0 12px #fff;
-    opacity:.5;
-    animation:twinkle var(--d) ease-in-out infinite;
-    animation-delay:var(--delay);
-  }
-  @keyframes twinkle {
-    0%,100% { opacity:.08; transform:scale(.5); }
-    50% { opacity:.9; transform:scale(1.7); }
-  }
+/* HUD 및 UI 등장 서시히 패인 */
+.hud {
+  position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  opacity: 0;
+  animation: hudFadeIn 1.2s ease-out 2.8s forwards;
+}
 
-  .card {
-    position:relative;
-    z-index:5;
-    width:min(920px, 88vw);
-    padding:72px 70px 62px;
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:34px;
-    background:linear-gradient(135deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
-    backdrop-filter:blur(24px) saturate(150%);
-    -webkit-backdrop-filter:blur(24px) saturate(150%);
-    box-shadow:
-      0 35px 100px rgba(0,0,0,.6),
-      inset 0 1px 0 rgba(255,255,255,.18),
-      0 0 80px rgba(111,67,255,.12);
-    text-align:center;
-    overflow:hidden;
-    animation:cardIn 1s cubic-bezier(.16,1,.3,1) both;
-  }
-  .card::before {
-    content:"";
-    position:absolute;
-    width:480px;height:480px;
-    left:50%;top:50%;
-    transform:translate(-50%,-50%);
-    background:conic-gradient(from 0deg, transparent, rgba(0,229,255,.13), transparent, rgba(255,0,153,.13), transparent);
-    animation:spin 12s linear infinite;
-    pointer-events:none;
-  }
-  .card::after {
-    content:"";
-    position:absolute;
-    inset:1px;
-    border-radius:33px;
-    background:rgba(5,5,12,.58);
-    z-index:-1;
-  }
-  @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
-  @keyframes cardIn {
-    from { opacity:0; transform:translateY(45px) scale(.94); filter:blur(12px); }
-    to { opacity:1; transform:none; filter:none; }
-  }
+@keyframes hudFadeIn {
+  to { opacity: 1; }
+}
 
-  .badge {
-    position:relative;
-    display:inline-flex;
-    align-items:center;
-    gap:9px;
-    padding:10px 18px;
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:999px;
-    background:rgba(255,255,255,.06);
-    color:#b9c7ff;
-    font-size:13px;
-    font-weight:700;
-    letter-spacing:.15em;
-    text-transform:uppercase;
-    box-shadow:0 0 30px rgba(94,87,255,.15);
-    animation:pulse 2.4s ease-in-out infinite;
-  }
-  .badge::before {
-    content:"";
-    width:7px;height:7px;border-radius:50%;
-    background:#55ffb1;
-    box-shadow:0 0 14px #55ffb1;
-  }
-  @keyframes pulse {
-    50% { box-shadow:0 0 40px rgba(94,87,255,.28); }
-  }
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 0 45%,rgba(0,0,0,.14) 75%,rgba(0,0,0,.42) 100%)}
+.topbar{position:absolute;left:34px;right:34px;top:28px;display:flex;justify-content:space-between;letter-spacing:.16em;text-transform:uppercase}
+.brand{font-size:13px;color:rgba(255,255,255,.82);font-weight:700}.brand span{color:#8ed8ff}
+.status{font-size:10px;color:rgba(255,255,255,.42)}.status i{display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:#71ffca;box-shadow:0 0 14px #71ffca}
 
-  h1 {
-    position:relative;
-    margin:28px 0 5px;
-    font-family:'Black Han Sans', sans-serif;
-    font-size:clamp(58px, 10vw, 122px);
-    line-height:.95;
-    letter-spacing:-.055em;
-    background:linear-gradient(105deg,#fff 10%,#c5c9ff 35%,#8e5cff 58%,#00e5ff 82%,#fff);
-    background-size:300% auto;
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-    text-shadow:0 0 45px rgba(126,91,255,.2);
-    animation:shine 4s linear infinite;
-  }
-  @keyframes shine { to { background-position:300% center; } }
+.center-ui{position:absolute;left:34px;bottom:78px;width:min(460px,80vw);text-align:left;transition:.4s}
+.center-ui.selected{opacity:.12;transform:translateY(8px)}
+.eyebrow{font-size:10px;letter-spacing:.4em;color:rgba(154,214,255,.62);margin-bottom:15px}
+h1{margin:0;font-weight:300;line-height:.92;letter-spacing:-.055em;font-size:clamp(28px,4.2vw,52px)}
+h1 strong{font-weight:700;background:linear-gradient(90deg,#fff,#9ad8ff 48%,#c3a7ff);-webkit-background-clip:text;color:transparent}
+.sub{margin:16px 0 0;max-width:420px;font-size:12px;line-height:1.85;color:rgba(255,255,255,.5)}
+.interaction{display:inline-flex;align-items:center;gap:9px;margin-top:18px;padding:10px 15px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);backdrop-filter:blur(12px);border-radius:999px;font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,.58)}
+.mouse{position:relative;width:15px;height:21px;border:1px solid rgba(255,255,255,.5);border-radius:10px}.mouse:after{content:"";position:absolute;left:50%;top:4px;width:2px;height:4px;transform:translateX(-50%);background:#fff;border-radius:2px;animation:wheel 1.5s infinite}
+@keyframes wheel{0%,100%{opacity:0;transform:translate(-50%,0)}40%{opacity:1}70%{opacity:0;transform:translate(-50%,5px)}}
+.side-hint{position:absolute;right:27px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;letter-spacing:.28em;font-size:8px;color:rgba(255,255,255,.22)}
+.corner{position:absolute;bottom:28px;color:rgba(255,255,255,.3);font-size:9px;letter-spacing:.17em}.corner.left{left:34px}.corner.right{right:34px;text-align:right}
 
-  .subtitle {
-    position:relative;
-    margin:18px 0 34px;
-    color:#a7a9bb;
-    font-size:clamp(14px,2vw,18px);
-    letter-spacing:.12em;
-  }
+/* ERP 모듈 정보 패널 */
+.planet-panel{position:absolute;right:35px;top:50%;transform:translate(35px,-50%);width:320px;padding:25px;border:1px solid rgba(158,211,255,.17);background:linear-gradient(145deg,rgba(8,15,32,.9),rgba(3,5,14,.8));backdrop-filter:blur(20px);border-radius:18px;box-shadow:0 25px 80px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.4s}
+.planet-panel.show{opacity:1;transform:translate(0,-50%);pointer-events:auto}
+.panel-close{position:absolute;right:12px;top:9px;width:32px;height:32px;border:0;background:transparent;color:rgba(255,255,255,.45);font-size:20px;cursor:pointer}
+.panel-close:hover{color:#fff}
+.tag{font-size:8px;letter-spacing:.3em;color:#8ed8ff;margin-bottom:9px}.planet-name{font-size:26px;letter-spacing:-.02em;font-weight:700;color:#fff}.planet-desc{margin:8px 0 16px;font-size:12px;line-height:1.7;color:rgba(255,255,255,.6)}
 
-  .message {
-    position:relative;
-    display:inline-block;
-    padding:18px 28px;
-    border-radius:18px;
-    background:rgba(255,255,255,.055);
-    border:1px solid rgba(255,255,255,.12);
-    font-size:18px;
-    font-weight:700;
-    color:#f4f4ff;
-  }
-  .message strong {
-    color:#00e5ff;
-    text-shadow:0 0 18px rgba(0,229,255,.7);
-  }
+/* 바로가기 버튼 */
+.btn-connect{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(90deg,#3b82f6,#8b5cf6);color:#fff;font-weight:700;font-size:12px;letter-spacing:.1em;cursor:pointer;transition:.2s;margin-bottom:15px;box-shadow:0 4px 15px rgba(59,130,246,0.4)}
+.btn-connect:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,0.6)}
+.btn-connect.disabled{background:#334155;color:#94a3b8;cursor:not-allowed;box-shadow:none}
 
-  .cta {
-    position:relative;
-    display:flex;
-    justify-content:center;
-    gap:12px;
-    margin-top:34px;
-    flex-wrap:wrap;
-  }
-  button {
-    border:0;
-    cursor:pointer;
-    color:#fff;
-    font:700 15px 'Noto Sans KR',sans-serif;
-    padding:14px 25px;
-    border-radius:14px;
-    background:linear-gradient(135deg,#744cff,#3c9cff);
-    box-shadow:0 10px 35px rgba(91,76,255,.35);
-    transition:.25s ease;
-  }
-  button:hover { transform:translateY(-4px) scale(1.03); box-shadow:0 15px 45px rgba(0,195,255,.3); }
-  button:active { transform:scale(.97); }
+/* 내구도 UI */
+.health-box{margin-bottom:16px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px}
+.health-label{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;margin-bottom:6px;color:rgba(255,255,255,.7)}
+.health-bar-bg{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.health-bar-fill{height:100%;width:100%;background:linear-gradient(90deg,#71ffca,#ffaa33,#ff3344);transition:width .3s ease-out}
 
-  .clock {
-    position:relative;
-    margin-top:28px;
-    color:#686b7c;
-    font-size:12px;
-    letter-spacing:.16em;
-  }
-
-  .scanline {
-    position:absolute;
-    left:0;right:0;height:1px;
-    background:linear-gradient(90deg,transparent,rgba(0,229,255,.45),transparent);
-    box-shadow:0 0 15px rgba(0,229,255,.3);
-    animation:scan 5s ease-in-out infinite;
-    opacity:.35;
-  }
-  @keyframes scan {
-    0% { top:-5%; } 50% { top:105%; } 100% { top:105%; }
-  }
-
-  .flash {
-    position:fixed;
-    inset:0;
-    z-index:20;
-    background:#fff;
-    pointer-events:none;
-    opacity:0;
-  }
-  .flash.go { animation:flash .45s ease-out; }
-  @keyframes flash {
-    0% { opacity:.8; } 100% { opacity:0; }
-  }
-
-  @media(max-width:600px) {
-    .card { padding:52px 24px 45px; border-radius:25px; }
-    .card::after { border-radius:24px; }
-    h1 { font-size:60px; }
-    .message { font-size:15px; }
-  }
+.drag-note{padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-size:9px;line-height:1.6;color:rgba(255,255,255,.38);letter-spacing:.02em}
+.toast{position:absolute;left:50%;bottom:30px;transform:translate(-50%,20px);padding:11px 20px;border:1px solid rgba(255,255,255,.15);background:rgba(4,7,16,.85);backdrop-filter:blur(12px);border-radius:999px;font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.9);opacity:0;transition:.3s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:820px){.planet-panel{left:15px;right:15px;top:auto;bottom:18px;width:auto;transform:translateY(28px)}.planet-panel.show{transform:translateY(0)}.side-hint{display:none}.topbar{left:18px;right:18px;top:18px}.corner.left{left:18px}.corner.right{right:18px}.center-ui{left:18px}}
 </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"
+  }
+}
+</script>
 </head>
+
 <body>
-<div class="scene">
-  <div class="grid"></div>
-  <div class="orb one"></div>
-  <div class="orb two"></div>
-  <div class="orb three"></div>
-  <div class="particles" id="particles"></div>
-  <div class="scanline"></div>
 
-  <main class="card">
-    <div class="badge">SYSTEM ALERT · WORK MODE</div>
-
-    <h1>정화정</h1>
-    <div class="subtitle">지금부터 집중 모드가 시작됩니다.</div>
-
-    <div class="message">
-      😴 <span>졸지 말고</span> <strong>일해.</strong> ⚡
-    </div>
-
-    <div class="cta">
-      <button id="wakeBtn">⚡ 정신 차리기</button>
-      <button id="workBtn">🚀 업무 시작</button>
-    </div>
-
-    <div class="clock" id="clock">FOCUS SYSTEM INITIALIZING...</div>
-  </main>
-
-  <div class="flash" id="flash"></div>
+<!-- 빅뱅 오프닝 오버레이 -->
+<div id="bigbang-overlay">
+  <div class="singularity"></div>
 </div>
 
-<script>
-  // 별빛 파티클 생성
-  const particleBox = document.getElementById('particles');
-  for (let i = 0; i < 90; i++) {
-    const p = document.createElement('i');
-    p.style.left = Math.random() * 100 + '%';
-    p.style.top = Math.random() * 100 + '%';
-    p.style.setProperty('--d', (2 + Math.random() * 5) + 's');
-    p.style.setProperty('--delay', (-Math.random() * 5) + 's');
-    p.style.transform = `scale(${0.5 + Math.random() * 1.5})`;
-    particleBox.appendChild(p);
+<canvas id="space"></canvas>
+<div class="vignette"></div>
+
+<div class="hud">
+  <div class="topbar">
+    <div class="brand">ENTERPRISE<span>/</span>ERP COSMOS</div>
+    <div class="status"><i></i> SYSTEM HUB ONLINE</div>
+  </div>
+
+  <div class="center-ui" id="centerUi">
+    <div class="eyebrow">ENTERPRISE RESOURCE PLANNING</div>
+    <h1>MODULE<br><strong>NAVIGATOR</strong></h1>
+    <div class="sub">접속할 ERP 모듈 행성을 선택하세요.<br><strong>연속 10회 클릭 시 모듈 산산조각 폭발 파편 이펙트가 발생합니다.</strong></div>
+    <div class="interaction"><span class="mouse"></span> CLICK PLANET TWICE TO BOMBARD</div>
+  </div>
+
+  <div class="side-hint">DRAG SPACE · SELECT MODULE · SYSTEM CONNECT</div>
+  <div class="corner left">ERP MODULE NAVIGATOR</div>
+  <div class="corner right">3D REALISTIC COSMOS</div>
+
+  <section class="planet-panel" id="planetPanel">
+    <button class="panel-close" id="closePanel" aria-label="패널 닫기">×</button>
+    <div class="tag" id="planetTag">MODULE 01</div>
+    <div class="planet-name" id="planetName">O-ERP</div>
+    <div class="planet-desc" id="planetDesc">통합 엔터프라이즈 자원 관리 모듈입니다.</div>
+    
+    <button type="button" class="btn-connect" id="btnConnect">🚀 모듈 바로가기 (CONNECT)</button>
+
+    <div class="health-box">
+      <div class="health-label">
+        <span>SYSTEM INTEGRITY</span>
+        <span id="healthText">10 / 10</span>
+      </div>
+      <div class="health-bar-bg">
+        <div class="health-bar-fill" id="healthFill"></div>
+      </div>
+    </div>
+
+    <div class="drag-note">💥 확대 상태에서 한 번 더 클릭 시 타격 소행성이 유도됩니다.<br>10회 충돌 시 모듈 시스템이 폭발합니다.</div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const canvas = document.getElementById("space");
+const panel = document.getElementById("planetPanel");
+const centerUi = document.getElementById("centerUi");
+const closePanel = document.getElementById("closePanel");
+const btnConnect = document.getElementById("btnConnect");
+const toast = document.getElementById("toast");
+const healthText = document.getElementById("healthText");
+const healthFill = document.getElementById("healthFill");
+
+try {
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x02030a);
+
+  const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 4000);
+  const HOME_POS = new THREE.Vector3(0, 55, 135);
+  const HOME_DIST = HOME_POS.length();
+  camera.position.copy(HOME_POS);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.055;
+  controls.enablePan = false;
+  controls.minDistance = 6;
+  controls.maxDistance = 320;
+  controls.rotateSpeed = 0.48;
+  controls.zoomSpeed = 0.65;
+
+  scene.add(new THREE.AmbientLight(0x78909c, 0.4));
+  const sunLight = new THREE.PointLight(0xfff5ea, 500, 0, 1.1);
+  sunLight.position.set(0, 0, 0);
+  scene.add(sunLight);
+
+  // 별 배경
+  const starCount = 4000;
+  const sPos = new Float32Array(starCount * 3);
+  const sCol = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const r = 700 + Math.random() * 500;
+    const th = Math.random() * Math.PI * 2;
+    const phi = Math.acos(THREE.MathUtils.randFloatSpread(2));
+    sPos[i*3] = r * Math.sin(phi) * Math.cos(th);
+    sPos[i*3+1] = r * Math.cos(phi);
+    sPos[i*3+2] = r * Math.sin(phi) * Math.sin(th);
+    sCol[i*3] = 0.8 + Math.random()*0.2;
+    sCol[i*3+1] = 0.85 + Math.random()*0.15;
+    sCol[i*3+2] = 1.0;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
+  starGeo.setAttribute("color", new THREE.BufferAttribute(sCol, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({size: 1.5, vertexColors: true, transparent: true, opacity: 0.8}));
+  scene.add(stars);
+
+  // 태양 (ERP CORE)
+  const SUN_RADIUS = 6.2;
+  const sunGroup = new THREE.Group();
+  scene.add(sunGroup);
+  const sunMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(SUN_RADIUS, 64, 64),
+    new THREE.MeshBasicMaterial({ color: 0xffaa22 })
+  );
+  sunGroup.add(sunMesh);
+
+  const sunGlowMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec3 vNormal;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vNormal;
+      uniform float uTime;
+      void main() {
+        float intensity = pow(0.65 - dot(vNormal, vec3(0, 0, 1.0)), 2.2);
+        gl_FragColor = vec4(1.0, 0.55, 0.15, 1.0) * intensity * (0.8 + 0.2 * sin(uTime * 2.0));
+      }
+    `,
+    transparent: true, blending: THREE.AdditiveBlending, side: THREE.BackSide
+  });
+  const sunGlow = new THREE.Mesh(new THREE.SphereGeometry(SUN_RADIUS * 1.3, 32, 32), sunGlowMat);
+  sunGroup.add(sunGlow);
+
+  function generatePlanetTexture(name, baseColorHex, detailColorHex) {
+    const c = document.createElement("canvas");
+    c.width = 1024; c.height = 512;
+    const g = c.getContext("2d");
+    g.fillStyle = baseColorHex; g.fillRect(0, 0, 1024, 512);
+    g.fillStyle = detailColorHex;
+    if (name === "JUPITER" || name === "SATURN") {
+      for (let y = 0; y < 512; y += 16 + Math.random()*20) {
+        g.globalAlpha = 0.2 + Math.random() * 0.4;
+        g.fillRect(0, y, 1024, 8 + Math.random()*15);
+      }
+    } else {
+      for (let i = 0; i < 400; i++) {
+        g.globalAlpha = 0.05 + Math.random() * 0.25;
+        const x = Math.random() * 1024, y = Math.random() * 512, r = 5 + Math.random() * 45;
+        g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+      }
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
   }
 
-  // 실시간 시계
-  const clock = document.getElementById('clock');
-  function updateClock() {
-    const now = new Date();
-    clock.textContent =
-      'FOCUS MODE  ·  ' +
-      now.toLocaleTimeString('ko-KR', {hour12:false});
+  function createModuleLabel(text) {
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 128;
+    const g = c.getContext("2d");
+    g.fillStyle = "rgba(10, 18, 38, 0.82)";
+    g.strokeStyle = "#60a5fa"; g.lineWidth = 4;
+    g.beginPath(); g.roundRect(8, 8, 496, 112, 16); g.fill(); g.stroke();
+    g.fillStyle = "#38bdf8"; g.font = "bold 42px Pretendard, sans-serif";
+    g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, 256, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
   }
-  updateClock();
-  setInterval(updateClock, 1000);
 
-  const flash = document.getElementById('flash');
+  function createTextTexture(text) {
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 256;
+    const g = c.getContext("2d");
+    g.fillStyle = "rgba(15, 23, 42, 0.92)"; g.strokeStyle = "#eab308"; g.lineWidth = 8;
+    g.beginPath(); g.roundRect(10, 10, 492, 236, 24); g.fill(); g.stroke();
+    g.fillStyle = "#ffffff"; g.font = "bold 56px Pretendard, sans-serif";
+    g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "#f59e0b"; g.shadowBlur = 15;
+    g.fillText(text, 256, 128);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
 
-  // 정신 차리기 버튼
-  document.getElementById('wakeBtn').addEventListener('click', () => {
-    flash.classList.remove('go');
-    void flash.offsetWidth;
-    flash.classList.add('go');
+  const data = [
+    { name: "MERCURY", erpName: "SR", desc: "서비스 요청 및 SR 처리 통합 관리 시스템", radius: 1.3, baseCol: "#475569", detailCol: "#1e293b", url: "https://example.com/sr", ready: true, orbit: { a: 11, e: 0.12, inc: 0.08, node: 0.2, phase: 0.5 } },
+    { name: "VENUS", erpName: "소모품관리시스템", desc: "사내 소모품 신청, 재고 및 수량 관리 모듈", radius: 1.9, baseCol: "#d97706", detailCol: "#78350f", url: "https://example.com/consumables", ready: true, orbit: { a: 17, e: 0.05, inc: -0.05, node: 0.8, phase: 1.8 } },
+    { name: "EARTH", erpName: "O-ERP", desc: "핵심 메인 엔터프라이즈 자원 관리 시스템", radius: 2.1, baseCol: "#2563eb", detailCol: "#1e3a8a", url: "https://example.com/o-erp", ready: true, orbit: { a: 24, e: 0.03, inc: 0.02, node: 1.5, phase: 3.1 } },
+    { name: "MARS", erpName: "HCMS", desc: "인적 자원 관리 및 인사/성과 관리 시스템", radius: 1.5, baseCol: "#dc2626", detailCol: "#450a0a", url: "https://example.com/hcms", ready: true, orbit: { a: 31, e: 0.09, inc: 0.04, node: 2.1, phase: 0.9 } },
+    { name: "JUPITER", erpName: "K-System", desc: "영업/기술/자재/생산/AS 통합 핵심 ERP 모듈", radius: 4.8, baseCol: "#ca8a04", detailCol: "#713f12", url: "https://example.com/k-system", ready: true, subModules: ["영업", "기술", "자재", "생산", "생산계획/PM", "AS", "품질"], orbit: { a: 44, e: 0.06, inc: -0.03, node: 3.0, phase: 4.2 } },
+    { name: "SATURN", erpName: "그룹웨어", desc: "전자결재, 메일, 커뮤니케이션 결합 업무 모듈", radius: 4.0, baseCol: "#059669", detailCol: "#064e3b", ring: true, url: "https://example.com/groupware", ready: true, orbit: { a: 59, e: 0.07, inc: 0.06, node: 4.1, phase: 2.5 } },
+    { name: "URANUS", erpName: "준비중", desc: "신규 모듈 오픈 준비 중입니다.", radius: 2.9, baseCol: "#0284c7", detailCol: "#0c4a6e", url: "", ready: false, orbit: { a: 74, e: 0.05, inc: -0.07, node: 5.0, phase: 5.8 } },
+    { name: "NEPTUNE", erpName: "준비중", desc: "신규 모듈 오픈 준비 중입니다.", radius: 2.8, baseCol: "#4f46e5", detailCol: "#1e1b4b", url: "", ready: false, orbit: { a: 89, e: 0.04, inc: 0.05, node: 1.1, phase: 1.2 } },
+    { name: "PLUTO", erpName: "준비중", desc: "신규 모듈 오픈 준비 중입니다.", radius: 1.1, baseCol: "#64748b", detailCol: "#0f172a", url: "", ready: false, orbit: { a: 104, e: 0.20, inc: 0.16, node: 2.8, phase: 3.7 } }
+  ];
 
-    document.querySelector('.card').animate([
-      { transform:'scale(1)' },
-      { transform:'scale(1.035) rotate(.4deg)' },
-      { transform:'scale(1)' }
-    ], {duration:420, easing:'cubic-bezier(.2,.9,.2,1)'});
+  const BASE_OMEGA = 0.22;
+  function orbitPos(o, E, out) {
+    return out.set(o.a * (Math.cos(E) - o.e), 0, o.b * Math.sin(E));
+  }
+
+  const planets = [];
+
+  data.forEach((d, index) => {
+    const o = d.orbit;
+    o.b = o.a * Math.sqrt(1 - o.e * o.e);
+    const omega = BASE_OMEGA * Math.pow(11 / o.a, 1.3);
+
+    const pivot = new THREE.Group();
+    pivot.rotation.set(o.inc, o.node, 0, "YXZ");
+    scene.add(pivot);
+
+    const pts = [];
+    for (let i = 0; i < 256; i++) pts.push(orbitPos(o, i / 256 * Math.PI * 2, new THREE.Vector3()));
+    const orbitLine = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: .2, depthWrite: false })
+    );
+    pivot.add(orbitLine);
+
+    const geo = new THREE.SphereGeometry(d.radius, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      map: generatePlanetTexture(d.name, d.baseCol, d.detailCol),
+      roughness: 0.7, metalness: 0.1
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData = {planetIndex: index};
+    pivot.add(mesh);
+
+    const labelTex = createModuleLabel(d.erpName);
+    const labelMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true, depthTest: false });
+    const labelSprite = new THREE.Sprite(labelMat);
+    labelSprite.scale.set(d.radius * 2.8, d.radius * 0.7, 1);
+    labelSprite.position.set(0, d.radius + 1.2, 0);
+    mesh.add(labelSprite);
+
+    if (d.ring) {
+      const ringGeo = new THREE.RingGeometry(d.radius * 1.35, d.radius * 2.2, 96);
+      const ringMat = new THREE.MeshStandardMaterial({color: 0x10b981, transparent: true, opacity: .6, side: THREE.DoubleSide});
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI * 0.52;
+      mesh.add(ring);
+    }
+
+    planets.push({
+      ...d, pivot, mesh, omega,
+      focusDist: Math.max(d.radius * 3.8, 8),
+      impactCount: 0,
+      isDestroyed: false
+    });
   });
 
-  // 업무 시작 버튼
-  document.getElementById('workBtn').addEventListener('click', () => {
-    document.querySelector('.message span').textContent = '좋아. 이제';
-    document.querySelector('.message strong').textContent = ' 일하자!';
-    document.querySelector('.message strong').style.color = '#55ffb1';
-    document.querySelector('.message strong').style.textShadow = '0 0 20px rgba(85,255,177,.75)';
+  // ───────────── 소행성 유도 및 충돌 시스템 ─────────────
+  const activeAsteroids = [];
+  const activeEffects = [];
+  let cameraShake = 0;
+
+  function launchAsteroid(targetPlanet) {
+    if (targetPlanet.isDestroyed) {
+      toast.textContent = `❌ ${targetPlanet.erpName} 모듈은 이미 파괴되었습니다.`;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+      return;
+    }
+
+    const targetPos = new THREE.Vector3();
+    targetPlanet.mesh.getWorldPosition(targetPos);
+
+    const astRadius = Math.max(0.45, targetPlanet.radius * 0.24);
+    const mesh = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(astRadius, 2),
+      new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4, emissive: 0x991100 })
+    );
+
+    const angle = Math.random() * Math.PI * 2;
+    const offset = new THREE.Vector3(
+      Math.cos(angle) * (20 + Math.random() * 10),
+      (Math.random() - 0.2) * 12 + 8,
+      Math.sin(angle) * (20 + Math.random() * 10)
+    );
+    const startPos = targetPos.clone().add(offset);
+    mesh.position.copy(startPos);
+    scene.add(mesh);
+
+    activeAsteroids.push({
+      mesh, targetPlanet, startPos, progress: 0, speed: 2.4
+    });
+
+    toast.textContent = `⚠️ WARN: ${targetPlanet.erpName} 모듈로 충격파 타격 중!`;
+    toast.classList.add("show");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 1500);
+  }
+
+  function triggerImpactEffect(hitPos, planet) {
+    planet.impactCount++;
+    updateHealthUI(planet);
+
+    const impactLight = new THREE.PointLight(0xff7722, 1500, 60, 1.5);
+    impactLight.position.copy(hitPos);
+    scene.add(impactLight);
+
+    const ringGeo = new THREE.RingGeometry(0.1, 0.8, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa33, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false
+    });
+    const shockwave = new THREE.Mesh(ringGeo, ringMat);
+    shockwave.position.copy(hitPos);
+    shockwave.lookAt(camera.position);
+    scene.add(shockwave);
+
+    const sparkCount = 35;
+    const sparkGeo = new THREE.BufferGeometry();
+    const pPositions = new Float32Array(sparkCount * 3);
+    const pVelocities = [];
+
+    for (let i = 0; i < sparkCount; i++) {
+      pPositions[i * 3] = hitPos.x;
+      pPositions[i * 3 + 1] = hitPos.y;
+      pPositions[i * 3 + 2] = hitPos.z;
+
+      const vel = new THREE.Vector3(
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2
+      ).normalize().multiplyScalar(8 + Math.random() * 14);
+      pVelocities.push(vel);
+    }
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+    const sparkMat = new THREE.PointsMaterial({
+      color: 0xffaa00, size: 0.9, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const sparkParticles = new THREE.Points(sparkGeo, sparkMat);
+    scene.add(sparkParticles);
+
+    const rockGroup = new THREE.Group();
+    rockGroup.position.copy(hitPos);
+    const rockChunks = [];
+    for (let i = 0; i < 10; i++) {
+      const rGeo = new THREE.DodecahedronGeometry(0.15 + Math.random() * 0.25, 0);
+      const rMat = new THREE.MeshStandardMaterial({ color: 0x885533, roughness: 0.8 });
+      const rMesh = new THREE.Mesh(rGeo, rMat);
+      rockGroup.add(rMesh);
+
+      const dir = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2).normalize();
+      const speed = 6 + Math.random() * 12;
+      const rot = new THREE.Vector3((Math.random()-0.5)*6, (Math.random()-0.5)*6, (Math.random()-0.5)*6);
+      rockChunks.push({ mesh: rMesh, dir, speed, rot });
+    }
+    scene.add(rockGroup);
+
+    cameraShake = 1.0;
+
+    activeEffects.push({
+      type: "impact", light: impactLight, shockwave, sparkParticles, pVelocities, rockGroup, rockChunks, life: 0.8, maxLife: 0.8
+    });
+
+    if (planet.impactCount >= 10) {
+      triggerPlanetDestruction(planet, hitPos);
+    } else {
+      toast.textContent = `💥 IMPACT! ${planet.erpName} 내구도 감소 (${planet.impactCount}/10)`;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+  }
+
+  function triggerPlanetDestruction(planet, impactPos) {
+    planet.isDestroyed = true;
+    const centerPos = new THREE.Vector3();
+    planet.mesh.getWorldPosition(centerPos);
+    planet.mesh.visible = false;
+
+    const flashLight = new THREE.PointLight(0xf59e0b, 6000, 400, 1.0);
+    flashLight.position.copy(centerPos);
+    scene.add(flashLight);
+
+    const planetDebrisGroup = new THREE.Group();
+    planetDebrisGroup.position.copy(centerPos);
+    scene.add(planetDebrisGroup);
+
+    const debrisChunks = [];
+    const chunkCount = 25;
+    for (let i = 0; i < chunkCount; i++) {
+      const dGeo = new THREE.DodecahedronGeometry(planet.radius * (0.1 + Math.random() * 0.18), 1);
+      const dMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(planet.baseCol).lerp(new THREE.Color(0xffaa00), Math.random() * 0.5),
+        roughness: 0.7
+      });
+      const dMesh = new THREE.Mesh(dGeo, dMat);
+      planetDebrisGroup.add(dMesh);
+
+      const dir = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2).normalize();
+      const speed = 10 + Math.random() * 20;
+      const rot = new THREE.Vector3((Math.random()-0.5)*5, (Math.random()-0.5)*5, (Math.random()-0.5)*5);
+      debrisChunks.push({ mesh: dMesh, dir, speed, rot });
+    }
+
+    if (planet.name === "JUPITER" && planet.subModules) {
+      const textGroup = new THREE.Group();
+      textGroup.position.copy(centerPos);
+      scene.add(textGroup);
+
+      const textChunks = [];
+      planet.subModules.forEach((subName) => {
+        const tex = createTextTexture(subName);
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false
+        });
+        const geo = new THREE.PlaneGeometry(6, 3);
+        const mesh = new THREE.Mesh(geo, mat);
+        textGroup.add(mesh);
+
+        const dir = new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2).normalize();
+        const speed = 14 + Math.random() * 24;
+        const rotSpeed = new THREE.Vector3((Math.random()-0.5)*4, (Math.random()-0.5)*4, (Math.random()-0.5)*4);
+        textChunks.push({ mesh, dir, speed, rotSpeed });
+      });
+
+      activeEffects.push({
+        type: "planetDestruction", light: flashLight, planetDebrisGroup, debrisChunks, textGroup, textChunks, life: 1.8, maxLife: 1.8
+      });
+
+      toast.textContent = `🚨 K-SYSTEM 폭발! [영업, 기술, 자재, 생산, PM, AS, 품질] 파편 분산!`;
+    } else {
+      activeEffects.push({
+        type: "planetDestruction", light: flashLight, planetDebrisGroup, debrisChunks, life: 1.8, maxLife: 1.8
+      });
+      toast.textContent = `🚨 CATASTROPHE! ${planet.erpName} 모듈이 파괴되었습니다!`;
+    }
+
+    cameraShake = 2.8;
+    toast.classList.add("show");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+
+    updateHealthUI(planet);
+  }
+
+  function updateHealthUI(planet) {
+    if (!selected || selected !== planet) return;
+    const hp = Math.max(0, 10 - planet.impactCount);
+    healthText.textContent = planet.isDestroyed ? "DESTROYED (0 / 10)" : `${hp} / 10`;
+    healthFill.style.width = `${(hp / 10) * 100}%`;
+    if (planet.isDestroyed) {
+      healthFill.style.background = "#555";
+    }
+  }
+
+  // ───────────── 인터랙션 ─────────────
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const ZERO = new THREE.Vector3(0, 0, 0);
+  const wp = new THREE.Vector3();
+  const lastWp = new THREE.Vector3();
+  const tmpV = new THREE.Vector3();
+
+  let selected = null;
+  let mode = "overview";
+  let focusEase = 0;
+  let lastSelectionTime = 0;
+  let downX = 0, downY = 0;
+
+  function updatePointer(e){
+    const rect=renderer.domElement.getBoundingClientRect();
+    pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
+    pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  }
+
+  function pick(e){
+    updatePointer(e);
+    raycaster.setFromCamera(pointer,camera);
+    const visiblePlanets = planets.filter(p => !p.isDestroyed);
+    const hits=raycaster.intersectObjects(visiblePlanets.map(p=>p.mesh),false);
+    return hits.length ? planets[hits[0].object.userData.planetIndex] : null;
+  }
+
+  function focusPlanet(p){
+    selected=p;
+    mode="focus";
+    focusEase=1.2;
+    p.mesh.getWorldPosition(lastWp);
+    
+    document.getElementById("planetTag").textContent=`ERP MODULE / ${p.name}`;
+    document.getElementById("planetName").textContent=p.erpName;
+    document.getElementById("planetDesc").textContent=p.desc;
+    
+    if (p.ready) {
+      btnConnect.classList.remove("disabled");
+      btnConnect.textContent = `🚀 ${p.erpName} 바로가기`;
+    } else {
+      btnConnect.classList.add("disabled");
+      btnConnect.textContent = `🔒 서비스 준비 중입니다`;
+    }
+
+    updateHealthUI(p);
+    panel.classList.add("show");
+    centerUi.classList.add("selected");
+  }
+
+  function close(){
+    selected=null;
+    mode="returning";
+    panel.classList.remove("show");
+    centerUi.classList.remove("selected");
+  }
+
+  btnConnect.addEventListener("click", () => {
+    if (selected && selected.ready && selected.url) {
+      window.open(selected.url, "_blank");
+    } else if (selected && !selected.ready) {
+      toast.textContent = "🔒 아직 오픈되지 않은 준비 중인 모듈입니다.";
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
   });
+
+  renderer.domElement.addEventListener("pointermove",(e)=>{
+    const p=pick(e);
+    renderer.domElement.style.cursor=p ? "pointer" : "grab";
+  });
+
+  renderer.domElement.addEventListener("pointerdown",(e)=>{
+    downX=e.clientX; downY=e.clientY;
+    document.body.classList.add("dragging");
+  });
+
+  renderer.domElement.addEventListener("pointerup",(e)=>{
+    document.body.classList.remove("dragging");
+    if(Math.hypot(e.clientX-downX,e.clientY-downY)>6) return;
+    const now=performance.now();
+    if(now-lastSelectionTime<120)return;
+    
+    const p=pick(e);
+    if(p){
+      lastSelectionTime=now;
+      if (selected === p && mode === "focus") {
+        launchAsteroid(p);
+      } else {
+        focusPlanet(p);
+      }
+    }
+  });
+
+  closePanel.addEventListener("click",close);
+
+  addEventListener("resize",()=>{
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  });
+
+  // ───────────── 메인 애니메이션 루프 ─────────────
+  const clock=new THREE.Clock();
+  let t=0;
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),0.05);
+    t+=dt;
+
+    sunMesh.rotation.y += dt*0.1;
+    sunGlowMat.uniforms.uTime.value = t;
+    stars.rotation.y = t*0.004;
+
+    planets.forEach((p)=>{
+      if (!p.isDestroyed) {
+        const E=p.orbit.phase+p.omega*t;
+        orbitPos(p.orbit,E,p.mesh.position);
+        p.mesh.rotation.y += dt*0.02;
+      }
+    });
+
+    for (let i = activeAsteroids.length - 1; i >= 0; i--) {
+      const ast = activeAsteroids[i];
+      ast.progress += dt * ast.speed;
+      const targetPos = new THREE.Vector3();
+      ast.targetPlanet.mesh.getWorldPosition(targetPos);
+
+      ast.mesh.position.lerpVectors(ast.startPos, targetPos, ast.progress);
+
+      if (ast.progress >= 1.0) {
+        triggerImpactEffect(targetPos, ast.targetPlanet);
+        scene.remove(ast.mesh);
+        ast.mesh.geometry.dispose(); ast.mesh.material.dispose();
+        activeAsteroids.splice(i, 1);
+      }
+    }
+
+    for (let i = activeEffects.length - 1; i >= 0; i--) {
+      const fx = activeEffects[i];
+      fx.life -= dt;
+      const progress = 1 - (fx.life / fx.maxLife);
+
+      if (fx.type === "impact") {
+        fx.light.intensity = Math.max(0, (fx.life / fx.maxLife) * 1500);
+
+        if (fx.shockwave) {
+          const s = 1 + progress * 10;
+          fx.shockwave.scale.set(s, s, s);
+          fx.shockwave.material.opacity = Math.max(0, 1 - progress);
+        }
+
+        if (fx.sparkParticles) {
+          const posAttr = fx.sparkParticles.geometry.attributes.position;
+          for (let j = 0; j < fx.pVelocities.length; j++) {
+            posAttr.setXYZ(
+              j,
+              posAttr.getX(j) + fx.pVelocities[j].x * dt,
+              posAttr.getY(j) + fx.pVelocities[j].y * dt,
+              posAttr.getZ(j) + fx.pVelocities[j].z * dt
+            );
+          }
+          posAttr.needsUpdate = true;
+          fx.sparkParticles.material.opacity = Math.max(0, 1 - progress);
+        }
+
+        if (fx.rockGroup) {
+          fx.rockChunks.forEach(c => {
+            c.mesh.position.addScaledVector(c.dir, c.speed * dt);
+            c.mesh.rotation.x += c.rot.x * dt;
+            c.mesh.rotation.y += c.rot.y * dt;
+          });
+        }
+      } else if (fx.type === "planetDestruction") {
+        fx.light.intensity = Math.max(0, (fx.life / fx.maxLife) * 6000);
+
+        if (fx.debrisChunks) {
+          fx.debrisChunks.forEach(c => {
+            c.mesh.position.addScaledVector(c.dir, c.speed * dt);
+            c.mesh.rotation.x += c.rot.x * dt;
+            c.mesh.rotation.y += c.rot.y * dt;
+          });
+        }
+
+        if (fx.textChunks) {
+          fx.textChunks.forEach(c => {
+            c.mesh.position.addScaledVector(c.dir, c.speed * dt);
+            c.mesh.rotation.x += c.rotSpeed.x * dt;
+            c.mesh.rotation.y += c.rotSpeed.y * dt;
+            c.mesh.material.opacity = Math.max(0, fx.life / fx.maxLife);
+          });
+        }
+      }
+
+      if (fx.life <= 0) {
+        if (fx.type === "impact") {
+          scene.remove(fx.light);
+          scene.remove(fx.shockwave); fx.shockwave.geometry.dispose(); fx.shockwave.material.dispose();
+          scene.remove(fx.sparkParticles); fx.sparkParticles.geometry.dispose(); fx.sparkParticles.material.dispose();
+          scene.remove(fx.rockGroup);
+          fx.rockChunks.forEach(c => { c.mesh.geometry.dispose(); c.mesh.material.dispose(); });
+        } else if (fx.type === "planetDestruction") {
+          scene.remove(fx.light);
+          scene.remove(fx.planetDebrisGroup);
+          fx.debrisChunks.forEach(c => { c.mesh.geometry.dispose(); c.mesh.material.dispose(); });
+          if (fx.textGroup) {
+            scene.remove(fx.textGroup);
+            fx.textChunks.forEach(c => { c.mesh.geometry.dispose(); c.mesh.material.dispose(); });
+          }
+        }
+        activeEffects.splice(i, 1);
+      }
+    }
+
+    if(mode==="focus" && selected){
+      selected.mesh.getWorldPosition(wp);
+      tmpV.copy(wp).sub(lastWp);
+      controls.target.add(tmpV); camera.position.add(tmpV);
+      lastWp.copy(wp);
+
+      const k=1-Math.exp(-dt*4.5);
+      tmpV.copy(wp).sub(controls.target).multiplyScalar(k);
+      controls.target.add(tmpV); camera.position.add(tmpV);
+
+      if(focusEase>0){
+        focusEase-=dt;
+        tmpV.copy(camera.position).sub(controls.target);
+        tmpV.setLength(THREE.MathUtils.lerp(tmpV.length(),selected.focusDist,k));
+        camera.position.copy(controls.target).add(tmpV);
+      }
+    } else if(mode==="returning"){
+      const k=1-Math.exp(-dt*3.2);
+      controls.target.lerp(ZERO,k);
+      tmpV.copy(camera.position).sub(controls.target);
+      tmpV.setLength(THREE.MathUtils.lerp(tmpV.length(),HOME_DIST,k));
+      camera.position.copy(controls.target).add(tmpV);
+      if(controls.target.length()<.05 && Math.abs(tmpV.length()-HOME_DIST)<.5) mode="overview";
+    }
+
+    if (cameraShake > 0) {
+      cameraShake -= dt * 2.2;
+      const shakeAmt = Math.max(0, cameraShake) * 0.45;
+      camera.position.x += (Math.random() - 0.5) * shakeAmt;
+      camera.position.y += (Math.random() - 0.5) * shakeAmt;
+    }
+
+    controls.update();
+    renderer.render(scene,camera);
+  }
+  animate();
+
+} catch (err) {
+  console.error(err);
+}
 </script>
 </body>
 </html>
